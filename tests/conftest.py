@@ -1,5 +1,7 @@
 import os
+import random
 import tempfile
+import typing
 
 import pytest
 import pytest_mock
@@ -12,6 +14,42 @@ RAW_DATABASE_URLS = os.environ.get("BASED_TEST_DB_URLS", "")
 DATABASE_URLS = RAW_DATABASE_URLS.split(",") if RAW_DATABASE_URLS else []
 DATABASE_URLS = [database_url.strip() for database_url in DATABASE_URLS]
 DATABASE_URLS = [*DATABASE_URLS, "sqlite"]
+
+
+@pytest.fixture(scope="session")
+def default_movie_a():
+    return "Blade Sprinter 1949", 2017
+
+
+@pytest.fixture(scope="session")
+def default_movie_b():
+    return "Farwent", 1996
+
+
+@pytest.fixture
+def gen_movie():
+    movies = [
+        ("Neten", 2020),
+        ("Jojo Hare", 2017),
+        ("North Park", 1997),
+        ("Plastic Man", 2008),
+        ("Dull Blinders", 2013),
+        ("BoJohn Manhorse", 2014),
+        ("Mulholland Walk", 2001),
+        ("A Small Lebowski", 1998),
+        ("Better Call Police", 2015),
+        ("Glorious Gentlemen", 2009),
+        ("It's never sunny in Wales", 2005),
+        ("Bravery and Love in Las Vegas", 1998),
+        ("Three Display Boards Inside Springfield, Missouri", 2017),
+    ]
+
+    def generate() -> str:
+        return movies.pop(
+            random.randrange(len(movies)),
+        )
+
+    return generate
 
 
 @pytest.fixture(scope="session")
@@ -36,6 +74,8 @@ def _context(
     table: sqlalchemy.Table,
     database_url: str,
     worker_id: str,
+    default_movie_a: typing.Tuple[str, int],
+    default_movie_b: typing.Tuple[str, int],
 ):
     if not database_url.startswith("sqlite"):
         if sqlalchemy_utils.database_exists(database_url):
@@ -47,11 +87,8 @@ def _context(
     metadata.create_all(engine)
 
     conn = engine.connect()
-    queries = [
-        table.insert().values(title="Blade Sprinter 2049", year=2017),
-        table.insert().values(title="Farwent", year=1996),
-    ]
-    for query in queries:
+    for title, year in (default_movie_a, default_movie_b):
+        query = table.insert().values(title=title, year=year)
         conn.execute(query)
     conn.commit()
     conn.close()

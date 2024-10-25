@@ -83,27 +83,18 @@ class Session:
     def _compile_query(
         self, query: ClauseElement,
     ) -> typing.Tuple[
-            str,
-            typing.Optional[typing.Union[
-                typing.Dict[str, typing.Any],
-                typing.List[typing.Any],
-            ]],
-        ]:
-        compiled_query = query.compile(dialect=self._dialect)
-        str_query = str(compiled_query)
+        str,
+        typing.Optional[typing.Union[
+            typing.Dict[str, typing.Any],
+            typing.List[typing.Any],
+        ]],
+    ]:
+        compiled_query = query.compile(
+            dialect=self._dialect,
+            compile_kwargs={"literal_binds": True},
+        )
 
-        if not compiled_query.params:
-            return str_query, None
-
-        if compiled_query.positional:  # type: ignore
-            params = [
-                compiled_query.params[key]
-                for key in compiled_query.positiontup  # type: ignore
-            ]
-        else:
-            params = compiled_query.params
-
-        return str_query, params
+        return str(compiled_query), compiled_query.params
 
     def _cast_row(
         self, cursor: typing.Any, row: typing.Any,  # noqa: ANN401
@@ -154,7 +145,7 @@ class Session:
         return [self._cast_row(cursor, row) for row in rows]
 
     async def create_transaction(self) -> None:
-        transaction_name = "".join(random.choices(string.ascii_lowercase, k=20))  # noqa: S311
+        transaction_name = "".join(random.choices(string.ascii_lowercase, k=20))
         query = f"SAVEPOINT {transaction_name};"
         await self._execute(query)
         self._transaction_stack.append(transaction_name)

@@ -59,7 +59,7 @@ select = [
   "INP", "N", "PIE", "PT", "PYI", "Q", "R", "RET", "RSE", "RUF", "S", "SIM",
   "SLF", "T20", "TID", "UP", "W",
 ]
-ignore = ["ANN101"]
+ignore = ["ANN101", "S311"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*" = [
