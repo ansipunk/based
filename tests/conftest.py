@@ -37,7 +37,7 @@ def _context(
     table: sqlalchemy.Table,
     database_url: str,
     worker_id: str,
-) -> typing.Generator[None]:
+) -> typing.Generator[None, None, None]:
     if not database_url.startswith("sqlite"):
         if sqlalchemy_utils.database_exists(database_url):
             sqlalchemy_utils.drop_database(database_url)
