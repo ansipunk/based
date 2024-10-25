@@ -1,6 +1,5 @@
 import os
 import tempfile
-import typing
 
 import pytest
 import pytest_mock
@@ -16,12 +15,12 @@ DATABASE_URLS = [*DATABASE_URLS, "sqlite"]
 
 
 @pytest.fixture(scope="session")
-def metadata() -> sqlalchemy.MetaData:
+def metadata():
     return sqlalchemy.MetaData()
 
 
 @pytest.fixture(scope="session")
-def table(metadata: sqlalchemy.MetaData) -> sqlalchemy.Table:
+def table(metadata: sqlalchemy.MetaData):
     return sqlalchemy.Table(
         "movies",
         metadata,
@@ -37,7 +36,7 @@ def _context(
     table: sqlalchemy.Table,
     database_url: str,
     worker_id: str,
-) -> typing.Generator[None, None, None]:
+):
     if not database_url.startswith("sqlite"):
         if sqlalchemy_utils.database_exists(database_url):
             sqlalchemy_utils.drop_database(database_url)
@@ -95,7 +94,7 @@ async def session(database: based.Database):
 
 
 @pytest.fixture(scope="session")
-def database_url(raw_database_url: str, worker_id: str) -> str:
+def database_url(raw_database_url: str, worker_id: str):
     if raw_database_url != "sqlite":
         dbinfo = raw_database_url.rsplit("/", maxsplit=1)
         dbinfo[1] = f"based-test-{worker_id}"
