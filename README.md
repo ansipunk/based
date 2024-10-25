@@ -102,6 +102,6 @@ the base class, adding private helpers as needed.
 - [ ] Database URL parsing and building
 - [ ] Add comments and docstrings
 - [ ] Add lock for PostgreSQL in `force_rollback` mode and SQLite in both modes
-- [ ] Refactor tests
+- [x] Refactor tests
 - [x] PostgreSQL backend
 - [x] Replace nested sessions with transaction stack
