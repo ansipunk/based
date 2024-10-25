@@ -22,7 +22,7 @@ class Database:
                 sqlite_url, force_rollback=force_rollback,
             )
         elif schema == "postgresql":
-            from based.backends.postgres import PostgreSQL
+            from based.backends.postgresql import PostgreSQL
             self._backend = PostgreSQL(url, force_rollback=force_rollback)
         else:
             raise ValueError(f"Unknown database schema: {schema}")

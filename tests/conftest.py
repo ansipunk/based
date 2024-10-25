@@ -1,5 +1,6 @@
 import os
 import tempfile
+import typing
 
 import pytest
 import pytest_mock
@@ -36,7 +37,7 @@ def _context(
     table: sqlalchemy.Table,
     database_url: str,
     worker_id: str,
-):
+) -> typing.Generator[None]:
     if not database_url.startswith("sqlite"):
         if sqlalchemy_utils.database_exists(database_url):
             sqlalchemy_utils.drop_database(database_url)
@@ -105,6 +106,6 @@ def database_url(raw_database_url: str, worker_id: str) -> str:
             yield f"sqlite:///{db_path!s}"
 
 
-def pytest_generate_tests(metafunc):
+def pytest_generate_tests(metafunc: pytest.Metafunc):
     if "raw_database_url" in metafunc.fixturenames:
         metafunc.parametrize("raw_database_url", DATABASE_URLS, scope="session")

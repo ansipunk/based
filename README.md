@@ -85,14 +85,14 @@ variable performance impact.
 
 As you can see, database backends are split into two classes - `BasedBackend`
 and `Session`. This design choice might be not very clear with SQLite, however,
-it is handy with backends that support connection pools like psycopg.
+it is handy with backends that support connection pools like PostgreSQL.
 
 ## Contributing
 
 This library was designed to make adding new backends as simple as possible. You
 need to implement `Backend` class and add its initialization to the `Database`
-class. Just follow SQLite's example. You only need to implement methods that
-raise `NotImplementedError` in the base class, adding private helpers as needed.
+class. You only need to implement methods that raise `NotImplementedError` in
+the base class, adding private helpers as needed.
 
 ## TODO
 
