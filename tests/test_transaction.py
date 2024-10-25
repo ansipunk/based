@@ -9,7 +9,7 @@ import based
 async def test_database_transaction(
     session: based.Session,
     table: sqlalchemy.Table,
-    gen_movie: typing.Callable[None, typing.Tuple[str, int]],
+    gen_movie: typing.Callable[[], typing.Tuple[str, int]],
 ):
     title, year = gen_movie()
 
@@ -26,7 +26,7 @@ async def test_database_transaction(
 async def test_database_failed_transaction(
     session: based.Session,
     table: sqlalchemy.Table,
-    gen_movie: typing.Callable[None, typing.Tuple[str, int]],
+    gen_movie: typing.Callable[[], typing.Tuple[str, int]],
 ):
     title, year = gen_movie()
 
@@ -44,7 +44,7 @@ async def test_database_failed_transaction(
 async def test_database_nested_transaction(
     session: based.Session,
     table: sqlalchemy.Table,
-    gen_movie: typing.Callable[None, typing.Tuple[str, int]],
+    gen_movie: typing.Callable[[], typing.Tuple[str, int]],
 ):
     title_a, year_a = gen_movie()
     title_b, year_b = gen_movie()
@@ -65,7 +65,7 @@ async def test_database_nested_transaction(
 async def test_database_failed_nested_transaction(
     session: based.Session,
     table: sqlalchemy.Table,
-    gen_movie: typing.Callable[None, typing.Tuple[str, int]],
+    gen_movie: typing.Callable[[], typing.Tuple[str, int]],
 ):
     title_a, year_a = gen_movie()
     title_b, year_b = gen_movie()

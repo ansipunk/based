@@ -11,7 +11,7 @@ async def test_database_unsuccessful_session(
     database_url: str,
     table: sqlalchemy.Table,
     force_rollback: bool,
-    gen_movie: typing.Callable[None, typing.Tuple[str, int]],
+    gen_movie: typing.Callable[[], typing.Tuple[str, int]],
 ):
     title, year = gen_movie()
 
@@ -33,7 +33,7 @@ async def test_database_successful_session(
     database_url: str,
     table: sqlalchemy.Table,
     force_rollback: bool,
-    gen_movie: typing.Callable[None, typing.Tuple[str, int]],
+    gen_movie: typing.Callable[[], typing.Tuple[str, int]],
 ):
     title, year = gen_movie()
 

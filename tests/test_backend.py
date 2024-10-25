@@ -9,7 +9,7 @@ import based
 async def test_database_force_rollback(
     table: sqlalchemy.Table,
     database_url: str,
-    gen_movie: typing.Callable[None, typing.Tuple[str, int]],
+    gen_movie: typing.Callable[[], typing.Tuple[str, int]],
 ):
     title, year = gen_movie()
 
@@ -28,7 +28,7 @@ async def test_database_force_rollback(
 async def test_database_no_force_rollback(
     table: sqlalchemy.Table,
     database_url: str,
-    gen_movie: typing.Callable[None, typing.Tuple[str, int]],
+    gen_movie: typing.Callable[[], typing.Tuple[str, int]],
 ):
     title, year = gen_movie()
 
