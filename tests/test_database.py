@@ -12,6 +12,58 @@ async def test_database(table: sqlalchemy.Table, database: based.Database):
         assert movie["title"] == "Blade Sprinter 2049"
 
 
+@pytest.mark.parametrize("force_rollback", [(True), (False)])
+async def test_database_unsuccessful_session(
+    database_url: str,
+    table: sqlalchemy.Table,
+    force_rollback: bool,
+):
+    title = "Plastic Man"
+
+    database = based.Database(database_url, force_rollback=force_rollback)
+    await database.connect()
+
+    with pytest.raises(Exception):
+        async with database.session() as session:
+            query = table.insert().values(title=title, year=2008)
+            await session.execute(query)
+            raise Exception
+
+    async with database.session() as session:
+        query = table.select().where(table.c.title == title)
+        movie = await session.fetch_one(query)
+        assert movie is None
+
+    await database.disconnect()
+
+
+@pytest.mark.parametrize("force_rollback", [(True), (False)])
+async def test_database_successful_session(
+    database_url: str,
+    table: sqlalchemy.Table,
+    force_rollback: bool,
+):
+    title = "Plastic Man"
+
+    database = based.Database(database_url, force_rollback=force_rollback)
+    await database.connect()
+
+    async with database.session() as session:
+        query = table.insert().values(title=title, year=2008)
+        await session.execute(query)
+
+    async with database.session() as session:
+        query = table.select().where(table.c.title == title)
+        movie = await session.fetch_one(query)
+        assert movie is not None
+
+    async with database.session() as session:
+        query = table.delete().where(table.c.title == title)
+        await session.execute(query)
+
+    await database.disconnect()
+
+
 def test_database_invalid_database_url():
     with pytest.raises(ValueError):
         based.Database(":memory:")
@@ -20,6 +72,21 @@ def test_database_invalid_database_url():
 async def test_database_connect_already_connected_db(database: based.Database):
     with pytest.raises(based.errors.DatabaseAlreadyConnectedError):
         await database.connect()
+
+
+async def test_database_connect_previously_connected_db(database_url: str):
+    database = based.Database(database_url, force_rollback=True)
+
+    await database.connect()
+    await database.disconnect()
+
+    with pytest.raises(based.errors.DatabaseReopenProhibitedError):
+        await database.connect()
+
+
+def test_database_with_invalid_schema():
+    with pytest.raises(ValueError):
+        based.Database("unsupported://localhost")
 
 
 async def test_database_force_rollback(table: sqlalchemy.Table, database_url: str):
@@ -76,7 +143,8 @@ async def test_database_not_connected_get_session(database_url: str):
     database = based.Database(database_url)
 
     with pytest.raises(based.errors.DatabaseNotConnectedError):
-        database.session()
+        async with database.session():
+            pass
 
 
 async def test_database_compile_query_without_params(
@@ -97,9 +165,9 @@ async def test_database_transaction(
 ):
     title = "Dull Blinders"
 
-    async with session.transaction() as transaction:
+    async with session.transaction():
         query = table.insert().values(title=title, year=2013)
-        await transaction.execute(query)
+        await session.execute(query)
 
     query = table.select().where(table.c.title == title)
     movie = await session.fetch_one(query)
@@ -113,9 +181,9 @@ async def test_database_failed_transaction(
     title = "North Park"
 
     with pytest.raises(Exception):
-        async with session.transaction() as transaction:
+        async with session.transaction():
             query = table.insert().values(title=title, year=1997)
-            await transaction.execute(query)
+            await session.execute(query)
             raise Exception
 
     query = table.select().where(table.c.title == title)
@@ -130,13 +198,13 @@ async def test_database_nested_transaction(
     title_a = "It's never sunny in Portland"
     title_b = "BoJohn Manhorse"
 
-    async with session.transaction() as tx1:
+    async with session.transaction():
         query = table.insert().values(title=title_a, year=2005)
-        await tx1.execute(query)
+        await session.execute(query)
 
-        async with tx1.transaction() as tx2:
+        async with session.transaction():
             query = table.insert().values(title=title_b, year=2014)
-            await tx2.execute(query)
+            await session.execute(query)
 
     query = table.select().where(table.c.year > 2000)
     movies = await session.fetch_all(query)
@@ -152,14 +220,14 @@ async def test_database_failed_nested_transaction(
     title_a = "Life Note"
     title_b = "Better Call Police"
 
-    async with session.transaction() as tx1:
+    async with session.transaction():
         query = table.insert().values(title=title_a, year=2006)
-        await tx1.execute(query)
+        await session.execute(query)
 
         with pytest.raises(Exception):
-            async with tx1.transaction() as tx2:
+            async with session.transaction():
                 query = table.insert().values(title=title_b, year=2015)
-                await tx2.execute(query)
+                await session.execute(query)
                 raise Exception
 
     query = table.select().where(table.c.year > 2000)
@@ -174,18 +242,6 @@ async def test_database_disconnect_not_connected_database(database_url: str):
 
     with pytest.raises(based.errors.DatabaseNotConnectedError):
         await database.disconnect()
-
-
-async def test_database_open_connected_session(session: based.Session):
-    with pytest.raises(based.errors.SessionAlreadyOpenError):
-        await session.open()
-
-
-async def test_database_commit_not_connected_session(database: based.Database):
-    session = database.session()
-
-    with pytest.raises(based.errors.SessionNotOpenError):
-        await session.commit()
 
 
 async def test_database_context_manager(database_url: str, table: sqlalchemy.Table):

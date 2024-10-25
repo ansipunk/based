@@ -14,7 +14,7 @@ help:
 bootstrap:
 	python3 -m venv $(VENV)
 	$(PYTHON) -m pip install --upgrade pip==24.2 setuptools==75.2.0 wheel==0.44.0
-	$(PYTHON) -m pip install -e .[sqlite,dev]
+	$(PYTHON) -m pip install -e .[postgres,sqlite,dev]
 
 lint: $(VENV)
 	$(PYTHON) -m ruff check based tests

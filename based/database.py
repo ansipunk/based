@@ -1,5 +1,6 @@
+from contextlib import asynccontextmanager
 from types import TracebackType
-from typing import Optional, Type
+from typing import AsyncGenerator, Optional, Type
 
 from based.backends import Backend, Session
 
@@ -15,24 +16,31 @@ class Database:
         schema = url_parts[0]
 
         if schema == "sqlite":
-            from based.backends.sqlite import SqliteBackend
+            from based.backends.sqlite import SQLite
             sqlite_url = url_parts[1][1:]
-            self._backend = SqliteBackend(
+            self._backend = SQLite(
                 sqlite_url, force_rollback=force_rollback,
             )
+        elif schema == "postgresql":
+            from based.backends.postgresql import PostgreSQL
+            self._backend = PostgreSQL(url, force_rollback=force_rollback)
+        else:
+            raise ValueError(f"Unknown database schema: {schema}")
 
-    async def connect(self) -> "Database":
+    async def connect(self) -> None:
         await self._backend.connect()
-        return self
 
     async def disconnect(self) -> None:
         await self._backend.disconnect()
 
-    def session(self) -> Session:
-        return self._backend.session()
+    @asynccontextmanager
+    async def session(self) -> AsyncGenerator[Session, None]:
+        async with self._backend.session() as session:
+            yield session
 
     async def __aenter__(self) -> "Database":
-        return await self.connect()
+        await self.connect()
+        return self
 
     async def __aexit__(
         self,

@@ -10,9 +10,5 @@ class DatabaseAlreadyConnectedError(BasedError):
     pass
 
 
-class SessionAlreadyOpenError(BasedError):
-    pass
-
-
-class SessionNotOpenError(BasedError):
+class DatabaseReopenProhibitedError(BasedError):
     pass

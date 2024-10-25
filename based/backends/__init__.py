@@ -1,20 +1,21 @@
-from secrets import token_urlsafe
-from types import TracebackType
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+import random
+import string
+import typing
+from contextlib import asynccontextmanager
 
+from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.sql import ClauseElement
 
 from based import errors
 
 
 class Backend:
-    _url: str
     _force_rollback: bool
-    _force_rollback_session: Optional["Session"] = None
     _connected: bool = False
+    _connected_before: bool = False
 
     def __init__(self, url: str, *, force_rollback: bool = False) -> None:
-        self._url = url
+        _ = url
         self._force_rollback = force_rollback
 
     async def _connect(self) -> None:
@@ -23,153 +24,100 @@ class Backend:
     async def _disconnect(self) -> None:
         raise NotImplementedError
 
-    def _get_session(self) -> "Session":
-        """Return a new Session object with connection from this pool.
-
-        It is crucial that returned Session objects have their
-        `_is_root` field set to `True`.
-
-        If there's asynchronous initialization to be done, it should be performed
-        in session's `_open` method.
-        """
+    @asynccontextmanager
+    async def _session(self) -> typing.AsyncGenerator["Session", None]:
         raise NotImplementedError
+        yield
 
-    def session(self) -> "Session":
+    @asynccontextmanager
+    async def session(self) -> typing.AsyncGenerator["Session", None]:
         if not self._connected:
             raise errors.DatabaseNotConnectedError
 
-        if self._force_rollback:
-            if self._force_rollback_session is None:
-                self._force_rollback_session = self._get_session()
-
-            return self._force_rollback_session
-
-        return self._get_session()
+        async with self._session() as session:
+            yield session
 
     async def connect(self) -> None:
         if self._connected:
             raise errors.DatabaseAlreadyConnectedError
 
+        if self._connected_before:
+            raise errors.DatabaseReopenProhibitedError
+
         await self._connect()
+        self._connected = True
+        self._connected_before = True
 
     async def disconnect(self) -> None:
         if not self._connected:
             raise errors.DatabaseNotConnectedError
 
-        if self._force_rollback and self._force_rollback_session:
-            await self._force_rollback_session.cancel()
-            await self._force_rollback_session.close(force=True)
-
         await self._disconnect()
+        self._connected = False
 
 
 class Session:
-    _is_root: bool
-    _force_rollback: bool
-    _transaction: Optional[str] = None
+    _conn: typing.Any
+    _dialect: Dialect
+    _transaction_stack: typing.List[str]
 
     def __init__(
         self,
-        *args: List[Any],
-        is_root: bool = False,
-        force_rollback: bool = False,
-        **kwargs: Dict[str, Any],
+        conn: typing.Any,  # noqa: ANN401
+        dialect: Dialect,
     ) -> None:
-        self._is_root = is_root
-        self._force_rollback = force_rollback
+        self._conn = conn
+        self._dialect = dialect
+        self._transaction_stack = []
 
     async def _execute(
         self,
-        query: str,
-        parameters: Optional[Union[Dict[str, Any], List[Any]]] = None,
-    ) -> None:
-        raise NotImplementedError
-
-    async def _fetch_one(
-        self,
-        query: str,
-        parameters: Optional[Union[Dict[str, Any], List[Any]]] = None,
-    ) -> Optional[Dict[str, Any]]:
-        raise NotImplementedError
-
-    async def _fetch_all(
-        self,
-        query: str,
-        parameters: Optional[Union[Dict[str, Any], List[Any]]] = None,
-    ) -> List[Dict[str, Any]]:
-        raise NotImplementedError
-
-    async def _create_transaction(self, transaction_name: str) -> None:
-        raise NotImplementedError
-
-    async def _commit_transaction(self, transaction_name: str) -> None:
-        raise NotImplementedError
-
-    async def _cancel_transaction(self, transaction_name: str) -> None:
-        raise NotImplementedError
-
-    async def _open(self) -> None:
-        raise NotImplementedError
-
-    async def _close(self) -> None:
-        raise NotImplementedError
-
-    def transaction(self) -> "Session":
-        """Return a new Session object with the same connection.
-
-        It is crucial that returned Session objects have their
-        `_is_root` field set to `False`.
-
-        This method is named `transaction` so it can be used as following:
-
-            async with session.transaction() as transaction:
-                await transaction.execute(query, parameters)
-        """
-        raise NotImplementedError
+        query: typing.Union[ClauseElement, str],
+        parameters: typing.Optional[typing.Union[
+            typing.Dict[str, typing.Any],
+            typing.List[typing.Any],
+        ]] = None,
+    ) -> typing.Any:  # noqa: ANN401
+        return await self._conn.execute(query, parameters)
 
     def _compile_query(
         self, query: ClauseElement,
-    ) -> Tuple[str, Optional[Union[Dict[str, Any], List[Any]]]]:
-        raise NotImplementedError
+    ) -> typing.Tuple[
+            str,
+            typing.Optional[typing.Union[
+                typing.Dict[str, typing.Any],
+                typing.List[typing.Any],
+            ]],
+        ]:
+        compiled_query = query.compile(dialect=self._dialect)
+        str_query = str(compiled_query)
 
-    async def open(self) -> None:
-        if self._transaction:
-            raise errors.SessionAlreadyOpenError
+        if not compiled_query.params:
+            return str_query, None
 
-        if self._is_root:
-            await self._open()
-
-        self._transaction = token_urlsafe(16)
-        await self._create_transaction(self._transaction)
-
-    async def commit(self) -> None:
-        if not self._transaction:
-            raise errors.SessionNotOpenError
-
-        if self._force_rollback and self._is_root:
-            await self._cancel_transaction(self._transaction)
+        if compiled_query.positional:  # type: ignore
+            params = [
+                compiled_query.params[key]
+                for key in compiled_query.positiontup  # type: ignore
+            ]
         else:
-            await self._commit_transaction(self._transaction)
+            params = compiled_query.params
 
-    async def cancel(self) -> None:
-        if self._transaction:
-            await self._cancel_transaction(self._transaction)
+        return str_query, params
 
-    async def close(self, *, force: bool = False) -> None:
-        if not self._transaction:
-            return
-
-        if force or (self._is_root and not self._force_rollback):
-            # Only close connections if it's a root session.
-            # Sessions with enabled `force_rollback` mode must be
-            # closed from `DatabaseBackend` object.
-            await self._close()
-            self._transaction = None
+    def _cast_row(
+        self, cursor: typing.Any, row: typing.Any,  # noqa: ANN401
+    ) -> typing.Dict[str, typing.Any]:
+        fields = [column[0] for column in cursor.description]
+        return {key: value for key, value in zip(fields, row)}
 
     async def execute(
         self,
-        query: Union[ClauseElement, str],
-        parameters: Optional[Union[Dict[str, Any], List[Any]]] = None,
+        query: typing.Union[ClauseElement, str],
+        parameters: typing.Optional[typing.Union[
+            typing.Dict[str, typing.Any],
+            typing.List[typing.Any],
+        ]] = None,
     ) -> None:
         if isinstance(query, ClauseElement):
             query, parameters = self._compile_query(query)
@@ -177,36 +125,60 @@ class Session:
 
     async def fetch_one(
         self,
-        query: Union[ClauseElement, str],
-        parameters: Optional[Union[Dict[str, Any], List[Any]]] = None,
-    ) -> Optional[Dict[str, Any]]:
+        query: typing.Union[ClauseElement, str],
+        parameters: typing.Optional[typing.Union[
+            typing.Dict[str, typing.Any],
+            typing.List[typing.Any],
+        ]] = None,
+    ) -> typing.Optional[typing.Dict[str, typing.Any]]:
         if isinstance(query, ClauseElement):
             query, parameters = self._compile_query(query)
-        return await self._fetch_one(query, parameters)
+        cursor = await self._execute(query, parameters)
+        row = await cursor.fetchone()
+        if not row:
+            return None
+        return self._cast_row(cursor, row)
 
     async def fetch_all(
         self,
-        query: Union[ClauseElement, str],
-        parameters: Optional[Union[Dict[str, Any], List[Any]]] = None,
-    ) -> List[Dict[str, Any]]:
+        query: typing.Union[ClauseElement, str],
+        parameters: typing.Optional[typing.Union[
+            typing.Dict[str, typing.Any],
+            typing.List[typing.Any],
+        ]] = None,
+    ) -> typing.List[typing.Dict[str, typing.Any]]:
         if isinstance(query, ClauseElement):
             query, parameters = self._compile_query(query)
-        return await self._fetch_all(query, parameters)
+        cursor = await self._execute(query, parameters)
+        rows = await cursor.fetchall()
+        return [self._cast_row(cursor, row) for row in rows]
 
-    async def __aenter__(self) -> "Session":
-        await self.open()
-        return self
+    async def create_transaction(self) -> None:
+        transaction_name = "".join(random.choices(string.ascii_lowercase, k=20))  # noqa: S311
+        query = f"SAVEPOINT {transaction_name};"
+        await self._execute(query)
+        self._transaction_stack.append(transaction_name)
 
-    async def __aexit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
-    ) -> None:
-        if exc_val is not None:
-            await self.cancel()
-            await self.close()
-            raise exc_val
+    async def commit_transaction(self) -> None:
+        transaction_name = self._transaction_stack[-1]
+        query = f"RELEASE SAVEPOINT {transaction_name};"
+        await self._execute(query)
+        self._transaction_stack.pop()
 
-        await self.commit()
-        await self.close()
+    async def cancel_transaction(self) -> None:
+        transaction_name = self._transaction_stack[-1]
+        query = f"ROLLBACK TO SAVEPOINT {transaction_name};"
+        await self._execute(query)
+        self._transaction_stack.pop()
+
+    @asynccontextmanager
+    async def transaction(self) -> typing.AsyncGenerator[None, None]:
+        await self.create_transaction()
+
+        try:
+            yield
+        except Exception:
+            await self.cancel_transaction()
+            raise
+        else:
+            await self.commit_transaction()
