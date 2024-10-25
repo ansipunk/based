@@ -18,6 +18,17 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: based
+          POSTGRES_PASSWORD: based
+          POSTGRES_DB: based
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 2s --health-retries 5
+
     steps:
       - uses: "actions/checkout@v4"
       - uses: "actions/setup-python@v5"
@@ -28,10 +39,23 @@ jobs:
       - name: "Run linters"
         run: "make lint"
       - name: "Run tests"
+        env: |
+          postgresql://based:based@localhost:5432/based
         run: "make test"
   coverage:
     name: "Test coverage"
     runs-on: "ubuntu-latest"
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: based
+          POSTGRES_PASSWORD: based
+          POSTGRES_DB: based
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       - uses: "actions/checkout@v4"
@@ -41,6 +65,8 @@ jobs:
       - name: "Install dependencies"
         run: "make bootstrap"
       - name: "Run tests"
+        env: |
+          postgresql://based:based@localhost:5432/based
         run: "make test"
       - name: Coverage report
         uses: irongut/CodeCoverageSummary@v1.3.0

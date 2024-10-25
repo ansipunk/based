@@ -10,8 +10,8 @@ import based
 
 RAW_DATABASE_URLS = os.environ.get("BASED_TEST_DB_URLS", "")
 DATABASE_URLS = RAW_DATABASE_URLS.split(",") if RAW_DATABASE_URLS else []
-DATABASE_URLS.append("sqlite")
-DATABASE_URLS.append("postgresql://based:based@127.0.0.1:5432/based")
+DATABASE_URLS = [database_url.strip() for database_url in DATABASE_URLS]
+DATABASE_URLS = [*DATABASE_URLS, "sqlite"]
 
 
 @pytest.fixture(scope="session")
