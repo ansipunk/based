@@ -78,8 +78,13 @@ connection so it can be rolled back upon database disconnection. SQLite is
 unaffected by `force_rollback` mode, as it doesn't have a connection pool either
 way. This means that PostgreSQL backend in `force_rollback` mode and SQLite
 backend in both modes are not guaranteed to work consistently when multiple
-sessions are used in parallel. Adding a lock might solve this problem with
-variable performance impact.
+sessions are used in parallel.
+
+For this problem `based` uses async locks on sessions in `force_rollback` mode.
+Locks can be used in default mode as well with `use_lock` flag during database
+initialization, however, it will only have effect if the database of your choice
+is SQLite, as in other cases isolation of sessions will be guaranteed by using
+separate connections for each session.
 
 ## Design choices
 
@@ -101,7 +106,7 @@ the base class, adding private helpers as needed.
   - [x] Testing with multiple Python versions
 - [ ] Database URL parsing and building
 - [ ] Add comments and docstrings
-- [ ] Add lock for PostgreSQL in `force_rollback` mode and SQLite in both modes
+- [x] Add lock for PostgreSQL in `force_rollback` mode and SQLite in both modes
 - [x] Refactor tests
 - [x] PostgreSQL backend
 - [x] Replace nested sessions with transaction stack
