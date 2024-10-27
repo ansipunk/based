@@ -10,12 +10,14 @@ from based.backends import Backend, Session
 
 
 class PostgreSQL(Backend):
+    """A PostgreSQL backend for based.Database using psycopg and psycopg_pool."""
+
     _pool: AsyncConnectionPool
     _force_rollback: bool
     _force_rollback_connection: AsyncConnection
     _dialect: Dialect
 
-    def __init__(self, url: str, *, force_rollback: bool = False) -> None:
+    def __init__(self, url: str, *, force_rollback: bool = False) -> None:  # noqa: D107
         self._pool = AsyncConnectionPool(url, open=False)
         self._force_rollback = force_rollback
         self._dialect = postgresql.dialect()  # type: ignore

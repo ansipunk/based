@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "based"
-authors = [{name = "ansipunk"}]
+authors = [{ name = "ansipunk" }]
 description = "A based asynchronous database connection manager."
 readme = "README.md"
-license = {file = "LICENSE.txt"}
-keywords = ["database", "sqlalchemy", "sqlite", "asyncio"]
+license = { file = "LICENSE.txt" }
+keywords = [ "database", "sqlalchemy", "sqlite", "asyncio" ]
 requires-python = ">=3.8"
-dynamic = ["version"]
+dynamic = [ "version" ]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Topic :: Database",
@@ -24,10 +24,12 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
 ]
-dependencies = ["SQLAlchemy>=2,<2.1"]
+dependencies = [ "SQLAlchemy>=2,<2.1" ]
 
 [project.optional-dependencies]
-sqlite = ["aiosqlite>=0.20,<1"]
+sqlite = [
+  "aiosqlite>=0.20,<1",
+]
 postgres = [
   "psycopg>=3,<4",
   "psycopg_pool>=3,<4",
@@ -49,19 +51,29 @@ version = { attr = "based.__version__" }
 
 [tool.pytest.ini_options]
 addopts = "-n 2 --cov=based --cov-report=term-missing --cov-report=html --cov-report=xml"
-testpaths = ["tests"]
+testpaths = [ "tests" ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 
 [tool.ruff.lint]
 select = [
-  "A", "ANN", "ASYNC", "B", "BLE", "C90", "COM", "E", "ERA", "F", "FBT", "I",
-  "INP", "N", "PIE", "PT", "PYI", "Q", "R", "RET", "RSE", "RUF", "S", "SIM",
-  "SLF", "T20", "TID", "UP", "W",
+  "A", "ANN", "ASYNC", "B", "BLE", "C90", "COM", "D", "E", "ERA", "F", "FBT",
+  "I", "INP", "N", "PIE", "PT", "PYI", "Q", "R", "RET", "RSE", "RUF", "S",
+  "SIM", "SLF", "T20", "TID", "UP", "W",
 ]
-ignore = ["ANN101", "S311", "SIM117"]
+ignore = [
+  "ANN101",
+  "D100", "D104", "D105", "D203", "D213", "D413",
+  "S311",
+  "SIM117",
+]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*" = [
-  "ANN201", "ANN202", "B017", "FBT001", "INP001", "PT011", "PT012", "S101", "SLF001",
+  "ANN201", "ANN202",
+  "B017",
+  "D100", "D103", "D104",
+  "FBT001",
+  "INP001",
+  "PT011", "PT012", "S101", "SLF001",
 ]
