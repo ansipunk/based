@@ -3,12 +3,12 @@ class BasedError(Exception):
 
 
 class DatabaseNotConnectedError(BasedError):
-    pass
+    """Raised on attempt to use a database that was not connected."""
 
 
 class DatabaseAlreadyConnectedError(BasedError):
-    pass
+    """Raised on attempt to connect to an already connected database."""
 
 
 class DatabaseReopenProhibitedError(BasedError):
-    pass
+    """Raised on attempt to reconnect to a previously disconnected database."""

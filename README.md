@@ -105,7 +105,8 @@ the base class, adding private helpers as needed.
   - [ ] Building and uploading packages to PyPi
   - [x] Testing with multiple Python versions
 - [ ] Database URL parsing and building
-- [ ] Add comments and docstrings
+- [ ] MySQL backend
+- [x] Add comments and docstrings
 - [x] Add lock for PostgreSQL in `force_rollback` mode and SQLite in both modes
 - [x] Refactor tests
 - [x] PostgreSQL backend

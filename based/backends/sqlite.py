@@ -9,12 +9,14 @@ from based.backends import Backend, Session
 
 
 class SQLite(Backend):
+    """A SQLite backend for based.Database using aiosqlite."""
+
     _conn: Connection
     _force_rollback: bool
     _force_rollback_session: "Session"
     _dialect: Dialect
 
-    def __init__(self, url: str, *, force_rollback: bool = False) -> None:
+    def __init__(self, url: str, *, force_rollback: bool = False) -> None:  # noqa: D107
         self._conn = connect(url, isolation_level=None)
         self._force_rollback = force_rollback
         self._dialect = sqlite.dialect()  # type: ignore
