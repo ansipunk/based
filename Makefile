@@ -31,5 +31,5 @@ publish: $(VENV)
 	$(PYTHON) -m twine upload dist/*
 
 clean:
-	rm -rf $(VENV) .coverage .mypy_cache .pytest_cache .ruff_cache htmlcov based.egg-info coverage.xml
+	rm -rf $(VENV) .coverage .mypy_cache .pytest_cache .ruff_cache htmlcov based.egg-info coverage.xml build dist
 	find . -type d -name "__pycache__" | xargs rm -rf
