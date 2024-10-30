@@ -1,3 +1,5 @@
+.*
+
 .venv
 *.egg-info
 
@@ -10,6 +12,9 @@ htmlcov
 coverage.xml
 
 __pycache__
+
+build/
+dist/
 
 !.github
 !.gitignore

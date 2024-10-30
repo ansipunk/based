@@ -43,6 +43,7 @@ jobs:
           BASED_TEST_DB_URLS: |
             postgresql://based:based@localhost:5432/based
         run: "make test"
+
   coverage:
     name: "Test coverage"
     runs-on: "ubuntu-latest"
