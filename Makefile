@@ -24,8 +24,7 @@ test: $(VENV)
 	$(PYTHON) -m pytest
 
 build: $(VENV)
-	$(PYTHON) -m build --sdist
-	$(PYTHON) -m build --wheel
+	$(PYTHON) -m build
 
 publish: $(VENV)
 	$(PYTHON) -m twine upload dist/*

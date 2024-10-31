@@ -9,7 +9,10 @@ from based.backends import Backend, Session
 
 
 class SQLite(Backend):
-    """A SQLite backend for based.Database using aiosqlite."""
+    """A SQLite backend for based.Database using aiosqlite.
+
+    This backend enables foreign key violations by default.
+    """
 
     _conn: Connection
     _force_rollback: bool
@@ -23,6 +26,7 @@ class SQLite(Backend):
 
     async def _connect(self) -> None:
         await self._conn
+        await self._conn.execute("PRAGMA foreign_keys = ON;")
 
         if self._force_rollback:
             session = Session(self._conn, self._dialect)
