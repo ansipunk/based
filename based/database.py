@@ -58,7 +58,7 @@ class Database:
             raise ValueError("Invalid database URL")
         schema = url_parts[0]
 
-        if force_rollback or (schema == "sqlite" and use_lock):
+        if use_lock and (force_rollback or schema == "sqlite"):
             self._lock = Lock()
 
         if schema == "sqlite":
