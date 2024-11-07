@@ -145,6 +145,26 @@ class Session:
         """
         return await self._conn.execute(query, params)
 
+    async def _execute_within_transaction(
+        self,
+        query: typing.Union[ClauseElement, str],
+        params: typing.Optional[typing.Union[
+            typing.Dict[str, typing.Any],
+            typing.List[typing.Any],
+        ]] = None,
+    ) -> typing.Any:  # noqa: ANN401
+        await self.create_transaction()
+
+        try:
+            cursor = await self._conn.execute(query, params)
+        except Exception:
+            await self.cancel_transaction()
+            raise
+        else:
+            await self.commit_transaction()
+
+        return cursor
+
     def _compile_query(
         self, query: ClauseElement,
     ) -> typing.Tuple[
@@ -187,7 +207,7 @@ class Session:
         """
         if isinstance(query, ClauseElement):
             query, params = self._compile_query(query)
-        await self._execute(query, params)
+        await self._execute_within_transaction(query, params)
 
     async def fetch_one(
         self,
@@ -213,7 +233,8 @@ class Session:
         """
         if isinstance(query, ClauseElement):
             query, params = self._compile_query(query)
-        cursor = await self._execute(query, params)
+
+        cursor = await self._execute_within_transaction(query, params)
         row = await cursor.fetchone()
         if not row:
             return None
@@ -242,7 +263,8 @@ class Session:
         """
         if isinstance(query, ClauseElement):
             query, params = self._compile_query(query)
-        cursor = await self._execute(query, params)
+
+        cursor = await self._execute_within_transaction(query, params)
         rows = await cursor.fetchall()
         return [self._cast_row(cursor, row) for row in rows]
 
