@@ -101,8 +101,8 @@ the base class, adding private helpers as needed.
 
 ## TODO
 
-- [ ] CI/CD
-  - [ ] Building and uploading packages to PyPi
+- [x] CI/CD
+  - [x] Building and uploading packages to PyPi
   - [x] Testing with multiple Python versions
 - [ ] Database URL parsing and building
 - [ ] MySQL backend

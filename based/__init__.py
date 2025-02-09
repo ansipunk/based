@@ -1,4 +1,4 @@
-__version__ = "0.2.1"
+__version__ = "0.4.1"
 
 from based.backends import Session
 from based.database import Database

@@ -9,6 +9,8 @@ jobs:
   publish:
     name: "Publish release"
     runs-on: "ubuntu-latest"
+    permissions:
+      id-token: write
 
     steps:
       - uses: "actions/checkout@v4"
@@ -24,7 +26,4 @@ jobs:
         with:
           files: dist/*
       - name: "Publish to PyPI"
-        run: "make publish"
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        uses: pypa/gh-action-pypi-publish@release/v1
