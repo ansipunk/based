@@ -13,7 +13,7 @@ This library is inspired by [databases](https://github.com/encode/databases).
 ## Usage
 
 ```bash
-pip install based[sqlite]
+pip install based[sqlite]  # or based[postgres]
 ```
 
 ```python
