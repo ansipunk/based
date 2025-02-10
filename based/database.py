@@ -15,14 +15,14 @@ class Database:
 
     def __init__(
         self,
-        url: str | None = None,
+        url: Optional[str] = None,
         *,
-        host: str | None = None,
-        port: str | None = None,
-        username: str | None = None,
-        password: str | None = None,
-        database: str | None = None,
-        schema: Literal["postgresql", "mysql", "sqlite"] | None = None,
+        host: Optional[str] = None,
+        port: Optional[str] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        database: Optional[str] = None,
+        schema: Optional[Literal["postgresql", "mysql", "sqlite"]] = None,
         force_rollback: bool = False,
         use_lock: bool = False,
     ) -> None:

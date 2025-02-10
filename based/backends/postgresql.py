@@ -20,13 +20,13 @@ class PostgreSQL(Backend):
 
     def __init__(  # noqa: D107
         self,
-        url: str | None = None,
+        url: typing.Optional[str] = None,
         *,
-        host: str | None = None,
-        port: str | None = None,
-        username: str | None = None,
-        password: str | None = None,
-        database: str | None = None,
+        host: typing.Optional[str] = None,
+        port: typing.Optional[str] = None,
+        username: typing.Optional[str] = None,
+        password: typing.Optional[str] = None,
+        database: typing.Optional[str] = None,
         force_rollback: bool = False,
     ) -> None:
         if url:
