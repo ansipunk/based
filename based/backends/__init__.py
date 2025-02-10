@@ -3,7 +3,6 @@ import string
 import typing
 from contextlib import asynccontextmanager
 
-from sqlalchemy import URL, make_url
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.sql import ClauseElement
 
