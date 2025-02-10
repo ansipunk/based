@@ -35,7 +35,7 @@ jobs:
           MARIADB_ROOT_PASSWORD: based
           MARIADB_DB: based
         ports:
-          - 5432:5432
+          - 3306:3306
 
     steps:
       - uses: "actions/checkout@v4"
@@ -74,7 +74,7 @@ jobs:
           MARIADB_ROOT_PASSWORD: based
           MARIADB_DB: based
         ports:
-          - 5432:5432
+          - 3306:3306
 
     steps:
       - uses: "actions/checkout@v4"
