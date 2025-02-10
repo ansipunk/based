@@ -1,7 +1,7 @@
 from asyncio import Lock
 from contextlib import asynccontextmanager
 from types import TracebackType
-from typing import AsyncGenerator, Optional, Type
+from typing import AsyncGenerator, Literal, Optional, Type
 
 from based.backends import Backend, Session
 
@@ -15,8 +15,14 @@ class Database:
 
     def __init__(
         self,
-        url: str,
+        url: Optional[str] = None,
         *,
+        host: Optional[str] = None,
+        port: Optional[str] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        database: Optional[str] = None,
+        schema: Optional[Literal["postgresql", "mysql", "sqlite"]] = None,
         force_rollback: bool = False,
         use_lock: bool = False,
     ) -> None:
@@ -36,7 +42,20 @@ class Database:
         Args:
             url:
                 Database URL should be a URL defined by RFC 1738, containing the correct
-                schema like `postgresql://user:password@host:port/database`.
+                schema like `postgresql://user:password@host:port/database`. Can be
+                omitted in favor of passing parameters separately.
+            username:
+                Database username.
+            password:
+                Database password.
+            host:
+                Database host.
+            port:
+                Database port.
+            database:
+                Database name.
+            schema:
+                Used database schema. Can be `postgresql` or `mysql`.
             force_rollback:
                 If this flag is set to True, then all the queries to the database will
                 be made in one single transaction which will be rolled back when the
@@ -53,10 +72,11 @@ class Database:
                 Can be raised when an invalid database URL is provided or the database
                 schema is not supported.
         """
-        url_parts = url.split("://")
-        if len(url_parts) != 2:
-            raise ValueError("Invalid database URL")
-        schema = url_parts[0]
+        if url is not None:
+            url_parts = url.split("://")
+            if len(url_parts) != 2:
+                raise ValueError("Invalid database URL")
+            schema = url_parts[0]
 
         if use_lock and (force_rollback or schema == "sqlite"):
             self._lock = Lock()
@@ -72,11 +92,27 @@ class Database:
         elif schema == "postgresql":
             from based.backends.postgresql import PostgreSQL
 
-            self._backend = PostgreSQL(url, force_rollback=force_rollback)
+            self._backend = PostgreSQL(
+                url=url,
+                username=username,
+                password=password,
+                host=host,
+                port=port,
+                database=database,
+                force_rollback=force_rollback,
+            )
         elif schema == "mysql":
             from based.backends.mysql import MySQL
 
-            self._backend = MySQL(url, force_rollback=force_rollback)
+            self._backend = MySQL(
+                url=url,
+                username=username,
+                password=password,
+                host=host,
+                port=port,
+                database=database,
+                force_rollback=force_rollback,
+            )
         else:
             raise ValueError(f"Unknown database schema: {schema}")
 

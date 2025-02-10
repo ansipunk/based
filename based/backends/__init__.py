@@ -19,9 +19,18 @@ class Backend:
     _connected: bool = False
     _connected_before: bool = False
 
-    def __init__(self, url: str, *, force_rollback: bool = False) -> None:
+    def __init__(
+        self,
+        url: typing.Optional[str] = None,
+        *,
+        host: typing.Optional[str] = None,
+        port: typing.Optional[str] = None,
+        username: typing.Optional[str] = None,
+        password: typing.Optional[str] = None,
+        database: typing.Optional[str] = None,
+        force_rollback: bool = False,
+    ) -> None:
         """Details of this method should be implementation specific."""
-        _ = url
         self._force_rollback = force_rollback
 
     async def _connect(self) -> None:
