@@ -1,5 +1,3 @@
-# Based
-
 A based asynchronous database connection manager.
 
 Based is designed to be used with SQLAlchemy Core requests. Currently, the only
@@ -9,6 +7,8 @@ issues or pull requests - are very welcome. API might change, as library is
 still at its early experiment stage.
 
 This library is inspired by [databases](https://github.com/encode/databases).
+The source code for this project is available
+[here](https://github.com/ansipunk/based).
 
 ## Usage
 
