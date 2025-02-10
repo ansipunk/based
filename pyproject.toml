@@ -50,6 +50,11 @@ dev = [
   "SQLAlchemy-Utils>=0.41,<1",
 ]
 
+[project.urls]
+Homepage = "https://github.com/ansipunk/based"
+Repository = "https://github.com/ansipunk/based.git"
+Issues = "https://github.com/ansipunk/based/issues"
+
 [tool.setuptools.dynamic]
 version = { attr = "based.__version__" }
 
