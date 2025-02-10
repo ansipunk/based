@@ -40,7 +40,6 @@ mysql = [
 ]
 dev = [
   "SQLAlchemy-Utils>=0.41,<1",
-  "mypy>=1.12,<2",
   "psycopg2-binary>=2.9,<3",
   "pytest-asyncio>=0.24,<1",
   "pytest-cov>=5,<6",

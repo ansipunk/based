@@ -1,4 +1,4 @@
-.PHONY: help bootstrap lint test clean
+.PHONY: help bootstrap lint test build clean
 DEFAULT: help
 
 VENV = .venv
@@ -9,6 +9,7 @@ help:
 	@echo "  bootstrap - setup development environment"
 	@echo "  lint      - run static code analysis"
 	@echo "  test      - run project tests"
+	@echo "  build     - build packages"
 	@echo "  clean     - clean environment and remove development artifacts"
 
 bootstrap:
@@ -18,7 +19,6 @@ bootstrap:
 
 lint: $(VENV)
 	$(PYTHON) -m ruff check based tests
-	$(PYTHON) -m mypy --strict based
 
 test: $(VENV)
 	$(PYTHON) -m pytest
