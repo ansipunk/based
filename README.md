@@ -3,17 +3,17 @@
 A based asynchronous database connection manager.
 
 Based is designed to be used with SQLAlchemy Core requests. Currently, the only
-supported databases are SQLite and PostgreSQL. It's fairly simple to add a new
-backend, should you need one. Work in progress - any contributions - issues or
-pull requests - are very welcome. API might change, as library is still at its
-early experiment stage.
+supported databases are SQLite, PostgreSQL and MySQL. It's fairly simple to add
+a new backend, should you need one. Work in progress - any contributions -
+issues or pull requests - are very welcome. API might change, as library is
+still at its early experiment stage.
 
 This library is inspired by [databases](https://github.com/encode/databases).
 
 ## Usage
 
 ```bash
-pip install based[sqlite]  # or based[postgres]
+pip install based[sqlite]  # or based[postgres] or based[mysql]
 ```
 
 ```python
@@ -99,13 +99,22 @@ need to implement `Backend` class and add its initialization to the `Database`
 class. You only need to implement methods that raise `NotImplementedError` in
 the base class, adding private helpers as needed.
 
+### Testing
+
+Pass database URLs for those you want to run the tests against. Comma separated
+list.
+
+```bash
+BASED_TEST_DB_URLS='postgresql://postgres:postgres@localhost:5432/postgres,mysql://root:mariadb@127.0.0.1:3306/mariadb' make test`
+```
+
 ## TODO
 
 - [x] CI/CD
   - [x] Building and uploading packages to PyPi
   - [x] Testing with multiple Python versions
 - [ ] Database URL parsing and building
-- [ ] MySQL backend
+- [x] MySQL backend
 - [x] Add comments and docstrings
 - [x] Add lock for PostgreSQL in `force_rollback` mode and SQLite in both modes
 - [x] Refactor tests
