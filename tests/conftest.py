@@ -108,20 +108,24 @@ def _context(
 @pytest.fixture
 async def database(database_url: str, mocker: pytest_mock.MockerFixture):
     database = based.Database(database_url, force_rollback=True)
+    await database.connect()
 
     if database_url.startswith("postgresql"):
         getconn_mock = mocker.spy(database._backend._pool, "getconn")
         putconn_mock = mocker.spy(database._backend._pool, "putconn")
-
-    await database.connect()
+    elif database_url.startswith("mysql"):
+        getconn_mock = mocker.spy(database._backend._pool, "acquire")
+        putconn_mock = mocker.spy(database._backend._pool, "release")
 
     try:
         yield database
     finally:
         await database.disconnect()
 
-        if database_url.startswith("postgresql"):
-            assert getconn_mock.call_count == putconn_mock.call_count
+        if database_url.startswith(("postgresql", "mysql")):
+            # 1 is subtracted because one connection is always automatically
+            # acquired when force rollback mode is engaged.
+            assert getconn_mock.call_count == putconn_mock.call_count - 1
 
 
 @pytest.fixture

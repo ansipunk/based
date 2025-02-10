@@ -63,13 +63,20 @@ class Database:
 
         if schema == "sqlite":
             from based.backends.sqlite import SQLite
+
             sqlite_url = url_parts[1][1:]
             self._backend = SQLite(
-                sqlite_url, force_rollback=force_rollback,
+                sqlite_url,
+                force_rollback=force_rollback,
             )
         elif schema == "postgresql":
             from based.backends.postgresql import PostgreSQL
+
             self._backend = PostgreSQL(url, force_rollback=force_rollback)
+        elif schema == "mysql":
+            from based.backends.mysql import MySQL
+
+            self._backend = MySQL(url, force_rollback=force_rollback)
         else:
             raise ValueError(f"Unknown database schema: {schema}")
 

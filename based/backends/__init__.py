@@ -122,10 +122,12 @@ class Session:
     async def _execute(
         self,
         query: typing.Union[ClauseElement, str],
-        params: typing.Optional[typing.Union[
-            typing.Dict[str, typing.Any],
-            typing.List[typing.Any],
-        ]] = None,
+        params: typing.Optional[
+            typing.Union[
+                typing.Dict[str, typing.Any],
+                typing.List[typing.Any],
+            ]
+        ] = None,
     ) -> typing.Any:  # noqa: ANN401
         """Execute the provided query and return a corresponding Cursor object.
 
@@ -145,34 +147,17 @@ class Session:
         """
         return await self._conn.execute(query, params)
 
-    async def _execute_within_transaction(
-        self,
-        query: typing.Union[ClauseElement, str],
-        params: typing.Optional[typing.Union[
-            typing.Dict[str, typing.Any],
-            typing.List[typing.Any],
-        ]] = None,
-    ) -> typing.Any:  # noqa: ANN401
-        await self.create_transaction()
-
-        try:
-            cursor = await self._conn.execute(query, params)
-        except Exception:
-            await self.cancel_transaction()
-            raise
-        else:
-            await self.commit_transaction()
-
-        return cursor
-
     def _compile_query(
-        self, query: ClauseElement,
+        self,
+        query: ClauseElement,
     ) -> typing.Tuple[
         str,
-        typing.Optional[typing.Union[
-            typing.Dict[str, typing.Any],
-            typing.List[typing.Any],
-        ]],
+        typing.Optional[
+            typing.Union[
+                typing.Dict[str, typing.Any],
+                typing.List[typing.Any],
+            ]
+        ],
     ]:
         compiled_query = query.compile(
             dialect=self._dialect,
@@ -182,7 +167,9 @@ class Session:
         return str(compiled_query), compiled_query.params
 
     def _cast_row(
-        self, cursor: typing.Any, row: typing.Any,  # noqa: ANN401
+        self,
+        cursor: typing.Any,  # noqa: ANN401
+        row: typing.Any,  # noqa: ANN401
     ) -> typing.Dict[str, typing.Any]:
         """Cast a driver specific Row object to a more general mapping."""
         fields = [column[0] for column in cursor.description]
@@ -191,10 +178,12 @@ class Session:
     async def execute(
         self,
         query: typing.Union[ClauseElement, str],
-        params: typing.Optional[typing.Union[
-            typing.Dict[str, typing.Any],
-            typing.List[typing.Any],
-        ]] = None,
+        params: typing.Optional[
+            typing.Union[
+                typing.Dict[str, typing.Any],
+                typing.List[typing.Any],
+            ]
+        ] = None,
     ) -> None:
         """Execute the provided query.
 
@@ -207,15 +196,17 @@ class Session:
         """
         if isinstance(query, ClauseElement):
             query, params = self._compile_query(query)
-        await self._execute_within_transaction(query, params)
+        await self._execute(query, params)
 
     async def fetch_one(
         self,
         query: typing.Union[ClauseElement, str],
-        params: typing.Optional[typing.Union[
-            typing.Dict[str, typing.Any],
-            typing.List[typing.Any],
-        ]] = None,
+        params: typing.Optional[
+            typing.Union[
+                typing.Dict[str, typing.Any],
+                typing.List[typing.Any],
+            ]
+        ] = None,
     ) -> typing.Optional[typing.Dict[str, typing.Any]]:
         """Execute the provided query.
 
@@ -234,19 +225,23 @@ class Session:
         if isinstance(query, ClauseElement):
             query, params = self._compile_query(query)
 
-        cursor = await self._execute_within_transaction(query, params)
+        cursor = await self._execute(query, params)
         row = await cursor.fetchone()
         if not row:
             return None
-        return self._cast_row(cursor, row)
+        row = self._cast_row(cursor, row)
+        await cursor.close()
+        return row
 
     async def fetch_all(
         self,
         query: typing.Union[ClauseElement, str],
-        params: typing.Optional[typing.Union[
-            typing.Dict[str, typing.Any],
-            typing.List[typing.Any],
-        ]] = None,
+        params: typing.Optional[
+            typing.Union[
+                typing.Dict[str, typing.Any],
+                typing.List[typing.Any],
+            ]
+        ] = None,
     ) -> typing.List[typing.Dict[str, typing.Any]]:
         """Execute the provided query.
 
@@ -264,9 +259,11 @@ class Session:
         if isinstance(query, ClauseElement):
             query, params = self._compile_query(query)
 
-        cursor = await self._execute_within_transaction(query, params)
+        cursor = await self._execute(query, params)
         rows = await cursor.fetchall()
-        return [self._cast_row(cursor, row) for row in rows]
+        rows = [self._cast_row(cursor, row) for row in rows]
+        await cursor.close()
+        return rows
 
     async def create_transaction(self) -> None:
         """Create a transaction and add it to the transaction stack."""
