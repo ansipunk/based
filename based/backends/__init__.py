@@ -3,6 +3,7 @@ import string
 import typing
 from contextlib import asynccontextmanager
 
+from sqlalchemy import URL, make_url
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.sql import ClauseElement
 
@@ -19,9 +20,18 @@ class Backend:
     _connected: bool = False
     _connected_before: bool = False
 
-    def __init__(self, url: str, *, force_rollback: bool = False) -> None:
+    def __init__(
+        self,
+        url: str | None = None,
+        *,
+        host: str | None = None,
+        port: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+        database: str | None = None,
+        force_rollback: bool = False,
+    ) -> None:
         """Details of this method should be implementation specific."""
-        _ = url
         self._force_rollback = force_rollback
 
     async def _connect(self) -> None:

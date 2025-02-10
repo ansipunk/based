@@ -22,7 +22,7 @@ class SQLite(Backend):
     def __init__(self, url: str, *, force_rollback: bool = False) -> None:  # noqa: D107
         self._conn = connect(url, isolation_level=None)
         self._force_rollback = force_rollback
-        self._dialect = sqlite.dialect()  # type: ignore
+        self._dialect = sqlite.dialect()
 
     async def _connect(self) -> None:
         await self._conn

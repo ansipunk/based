@@ -113,7 +113,7 @@ BASED_TEST_DB_URLS='postgresql://postgres:postgres@localhost:5432/postgres,mysql
 - [x] CI/CD
   - [x] Building and uploading packages to PyPi
   - [x] Testing with multiple Python versions
-- [ ] Database URL parsing and building
+- [x] Database URL parsing and building
 - [x] MySQL backend
 - [x] Add comments and docstrings
 - [x] Add lock for PostgreSQL in `force_rollback` mode and SQLite in both modes

@@ -19,10 +19,32 @@ class MySQL(Backend):
     _force_rollback_connection: asyncmy.Connection
     _dialect: Dialect
 
-    def __init__(self, url: str, *, force_rollback: bool = False) -> None:  # noqa: D107
-        self._url = make_url(url)
+    def __init__(  # noqa: D107
+        self,
+        url: str | None = None,
+        *,
+        host: str | None = None,
+        port: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+        database: str | None = None,
+        force_rollback: bool = False,
+    ) -> None:
+        if url:
+            self._url = make_url(url)
+        else:
+            self._url = URL.create(
+                username=username,
+                password=password,
+                host=host,
+                port=port,
+                database=database,
+                drivername="asyncmy",
+                query={},
+            )
+
         self._force_rollback = force_rollback
-        self._dialect = dialect()  # type: ignore
+        self._dialect = dialect()
 
     async def _connect(self) -> None:
         self._pool = await asyncmy.create_pool(
