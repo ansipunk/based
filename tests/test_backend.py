@@ -1,3 +1,4 @@
+import contextlib
 import typing
 
 import pytest
@@ -33,7 +34,9 @@ async def test_database_force_rollback_with_lock(
     title, year = gen_movie()
 
     async with based.Database(
-        database_url, force_rollback=True, use_lock=True,
+        database_url,
+        force_rollback=True,
+        use_lock=True,
     ) as database:
         async with database.session() as session:
             query = table.insert().values(title=title, year=year)
@@ -85,3 +88,17 @@ async def test_abstract_backend(database_url: str):
 
     with pytest.raises(NotImplementedError):
         await backend.disconnect()
+
+
+async def test_disconnect_with_failed_transaction_force_rollback(database_url: str):
+    async with based.Database(database_url, force_rollback=True) as database:
+        async with database.session() as session:
+            with contextlib.suppress(Exception):
+                await session.execute("SELECT 1 FROM nonexistent;")
+
+
+async def test_disconnect_with_failed_transaction_no_force_rollback(database_url: str):
+    async with based.Database(database_url, force_rollback=False) as database:
+        async with database.session() as session:
+            with contextlib.suppress(Exception):
+                await session.execute("SELECT 1 FROM nonexistent;")

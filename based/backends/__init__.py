@@ -118,6 +118,7 @@ class Session:
     _conn: typing.Any
     _dialect: Dialect
     _transaction_stack: typing.List[str]
+    transaction_failed: bool
 
     def __init__(  # noqa: D107
         self,
@@ -127,6 +128,7 @@ class Session:
         self._conn = conn
         self._dialect = dialect
         self._transaction_stack = []
+        self.transaction_failed = False
 
     async def _execute(
         self,
@@ -154,7 +156,11 @@ class Session:
             cursor:
                 A cursor returned by the database driver after executing the query.
         """
-        return await self._conn.execute(query, params)
+        try:
+            return await self._conn.execute(query, params)
+        except Exception:
+            self.transaction_failed = True
+            raise
 
     def _compile_query(
         self,

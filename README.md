@@ -105,7 +105,7 @@ Pass database URLs for those you want to run the tests against. Comma separated
 list.
 
 ```bash
-BASED_TEST_DB_URLS='postgresql://postgres:postgres@localhost:5432/postgres,mysql://root:mariadb@127.0.0.1:3306/mariadb' make test`
+BASED_TEST_DB_URLS='postgresql://postgres:postgres@localhost:5432/postgres,mysql://root:mariadb@127.0.0.1:3306/mariadb' make test
 ```
 
 ## TODO

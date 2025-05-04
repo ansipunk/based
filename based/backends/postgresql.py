@@ -84,7 +84,10 @@ class PostgreSQL(Backend):
                 await session.cancel_transaction()
                 raise
             else:
-                await session.commit_transaction()
+                if session.transaction_failed:
+                    await session.cancel_transaction()
+                else:
+                    await session.commit_transaction()
         else:
             try:
                 yield session
@@ -92,6 +95,9 @@ class PostgreSQL(Backend):
                 await connection.rollback()
                 raise
             else:
-                await connection.commit()
+                if session.transaction_failed:
+                    await connection.rollback()
+                else:
+                    await connection.commit()
             finally:
                 await self._pool.putconn(connection)
